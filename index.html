@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Cờ Caro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(20, 40px);
+            grid-template-rows: repeat(20, 40px);
+            gap: 1px;
+            margin: 20px auto;
+            background-color: #000;
+            width: fit-content;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .cell.taken {
+            cursor: not-allowed;
+        }
+
+        .info {
+            margin: 10px 0;
+            color: #555;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .instructions {
+            margin: 20px;
+            padding: 15px;
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #333;
+        }
+
+        .instructions h2 {
+            margin-top: 0;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Cờ Caro</h1>
+    <div class="info" id="info">Lượt chơi: X</div>
+    <div class="board" id="board"></div>
+    <button onclick="resetBoard()">Làm mới bàn cờ</button>
+
+    <div class="instructions">
+        <h2>Hướng dẫn chơi</h2>
+        <p>1. Trò chơi dành cho 2 người chơi, lần lượt đặt dấu "X" và "O" trên bàn cờ.</p>
+        <p>2. Người chơi đầu tiên tạo được một hàng 5 dấu liên tiếp (ngang, dọc hoặc chéo) sẽ thắng.</p>
+        <p>3. Click vào một ô để đặt dấu của bạn. Sau khi đặt, ô sẽ không thể thay đổi.</p>
+        <p>4. Nhấn nút "Làm mới bàn cờ" để bắt đầu lại trò chơi mới.</p>
+        <p>Chúc bạn chơi vui vẻ!</p>
+    </div>
+
+    <script>
+        const boardSize = 20;
+        const board = document.getElementById("board");
+        const info = document.getElementById("info");
+        let currentPlayer = "X";
+        let gameBoard = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+
+        // Tạo bàn cờ
+        function createBoard() {
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    const cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.addEventListener("click", () => handleMove(cell, i, j));
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        // Xử lý nước đi
+        function handleMove(cell, row, col) {
+            if (cell.classList.contains("taken")) return;
+
+            cell.textContent = currentPlayer;
+            cell.classList.add("taken");
+            gameBoard[row][col] = currentPlayer;
+
+            if (checkWin(row, col)) {
+                info.textContent = `Người chơi ${currentPlayer} thắng!`;
+                document.querySelectorAll(".cell").forEach(cell => cell.classList.add("taken"));
+                return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            info.textContent = `Lượt chơi: ${currentPlayer}`;
+        }
+
+        // Kiểm tra chiến thắng
+        function checkWin(row, col) {
+            const directions = [
+                { dr: 0, dc: 1 }, // Horizontal
+                { dr: 1, dc: 0 }, // Vertical
+                { dr: 1, dc: 1 }, // Diagonal top-left to bottom-right
+                { dr: 1, dc: -1 } // Diagonal top-right to bottom-left
+            ];
+
+            for (const { dr, dc } of directions) {
+                let count = 1;
+
+                // Check forward
+                for (let step = 1; step < 5; step++) {
+                    const r = row + dr * step;
+                    const c = col + dc * step;
+                    if (r < 0 || r >= boardSize || c < 0 || c >= boardSize || gameBoard[r][c] !== currentPlayer) break;
+                    count++;
+                }
+
+                // Check backward
+                for (let step = 1; step < 5; step++) {
+                    const r = row - dr * step;
+                    const c = col - dc * step;
+                    if (r < 0 || r >= boardSize || c < 0 || c >= boardSize || gameBoard[r][c] !== currentPlayer) break;
+                    count++;
+                }
+
+                if (count >= 5) return true;
+            }
+
+            return false;
+        }
+
+        // Làm mới bàn cờ
+        function resetBoard() {
+            board.innerHTML = "";
+            gameBoard = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+            currentPlayer = "X";
+            info.textContent = `Lượt chơi: ${currentPlayer}`;
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
